@@ -4,23 +4,24 @@
 
 from sklearn.preprocessing import MinMaxScaler
 import spotipy
-from spotipy.oauth2 import SpotifyOAuth
+from spotipy.oauth2 import SpotifyOAuth, SpotifyClientCredentials
 import pandas as pd
 import matplotlib.pyplot as plt
-plt.style.use('dark_background')
+# plt.style.use('dark_background')
 
 from math import pi
 
 
 SPOTIPY_CLIENT_ID = '650afbef135d47259ff2c8dfbdb7affa'
 SPOTIPY_CLIENT_SECRET = '7b2ad9455feb43b29355e442a9035767'
-SPOTIPY_REDIRECT_URI = 'https://open.spotify.com/'
+SPOTIPY_REDIRECT_URI = 'https://share.streamlit.io/iamknownstranger/moodify/main/moodify.py'
 
 
-scope = "user-read-recently-played user-library-read"
+scope = "user-read-recently-played"
 
 sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id=SPOTIPY_CLIENT_ID,
                      client_secret=SPOTIPY_CLIENT_SECRET, redirect_uri=SPOTIPY_REDIRECT_URI, scope=scope))
+
 
 playlist = sp.current_user_recently_played()
 
@@ -29,29 +30,29 @@ track_ids = []
 
 for item in playlist['items']:
     track_id = item['track']['id']
-    track_ids.append(track_id)
+    if track_id not in track_ids:
+        track_ids.append(track_id)
 
 track_meta_data = {'id': [], 'album': [], 'name': [],
                    'artist': [], 'explicit': [], 'popularity': []}
 
-streamlit_data = {'track_name': [], 'images': [], 'album_name': [
+streamlit_data = {'track_id':[], 'track_name': [], 'images': [], 'album_name': [
 ], 'artist': [], 'album_uri':[], 'external_urls': [], 'href': [], 'uri': []}
+
+
 for track_id in track_ids:
     # get song's meta data
     meta = sp.track(track_id)
 
     streamlit_data['track_name'].append(meta['name'])
+    streamlit_data['track_id'].append(track_id)
     streamlit_data['images'].append(meta['album']['images'][0]['url'])
-
-  
 
     streamlit_data['album_name'].append(meta['album']['name'])
     streamlit_data['artist'].append(meta['album']['artists'])
     streamlit_data['external_urls'].append(meta['external_urls'])
     streamlit_data['href'].append(meta['album']['href'])
     streamlit_data['uri'].append(meta['uri'])
-    # print(meta['album']['uri'])
-    # print(meta['album']['id'])
     streamlit_data['album_uri'].append(meta['album']['id'])
 
     # song id
@@ -102,8 +103,6 @@ min_max_scaler = MinMaxScaler()
 music_feature.loc[:] = min_max_scaler.fit_transform(music_feature.loc[:])
 
 
-# plot size
-fig = plt.figure(figsize=(10, 7))
 
 
 # convert column names into a list
@@ -124,13 +123,14 @@ angles += angles[:1]
 
 
 # plot
-plt.polar(angles, value)
-plt.fill(angles, value, alpha=0.3)
+chart = plt.figure()
+chart.set_facecolor('#0E1117')
+ax = chart.add_subplot(projection='polar')
+ax.set_facecolor('#0E1117')
+ax.scatter(angles, value)
+plt.fill(angles, value)
 
+plt.xticks(angles[:-1], categories, size=15, color='white')
+plt.yticks(color='white', size=15)
 
-plt.xticks(angles[:-1], categories, size=15)
-plt.yticks(color='grey', size=15)
-
-
-# axes = plt.subplot()
-# axes.set_facecolor((0.39, 0.51, 0.70))
+plt.savefig('output.png')
