@@ -7,11 +7,9 @@ st.title("**Sekhar's recently played songs**")
 # st.dataframe(data)
 
 
-url = 'https://open.spotify.com/embed/album/'
+url = 'https://open.spotify.com/embed/track/'
 for index, track in data.iterrows():
-    data_container = st.container()
-    
-    with data_container:
+    with st.container():
         images, track_data = st.columns([2, 6])
         images.image(track.images)
         with track_data:
@@ -20,7 +18,7 @@ for index, track in data.iterrows():
             st.subheader(f'from **{track.album_name}**')
 
             with st.expander("Play on Spotify"):
-                components.iframe(url + track.album_uri)
+                components.iframe(url + track.track_id)
  
 st.header("Sekhar's **moodify** chart")
 st.pyplot(plt)
